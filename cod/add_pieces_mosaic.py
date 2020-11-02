@@ -130,24 +130,6 @@ def grid_image(params, new_h, new_w, small_img_h, small_img_w):
             caroiaj[i * small_img_h:i * small_img_h + h_piece,
             j * small_img_w:(j + 1) * small_img_w, :] = chosen_image.copy()
 
-    # remainder = new_h % small_img_h
-    #
-    # if remainder:
-    #     for j in range(params.num_pieces_horizontal):
-    #         cropped_image = params.image_resized[
-    #                         params.num_pieces_vertical * small_img_h:params.num_pieces_vertical * small_img_h + remainder,
-    #                         j * small_img_w:(j + 1) * small_img_w, :]
-    #         chosen_image = get_most_similar(cropped_image, params.small_images, remainder)[0]
-    #
-    #         caroiaj[params.num_pieces_vertical * small_img_h:params.num_pieces_vertical * small_img_h + remainder,
-    #         j * small_img_w:(j + 1) * small_img_w, :] = chosen_image.copy()
-
-    # cv.imwrite('../Caroiaj_ferrari_100.png', caroiaj)
-
-    cv.imshow('Caroiaj', caroiaj)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-
     return caroiaj
 
 
@@ -201,45 +183,6 @@ def grid_image_with_diff_neighbors(params, new_h, new_w, small_img_h, small_img_
 
                 caroiaj_distinct[i * small_img_h:i * small_img_h + h_piece, j * small_img_w:(j + 1) * small_img_w,
                 :] = chosen_image.copy()
-
-    # if remainder:
-    #     for j in range(params.num_pieces_horizontal):
-    #         cropped_image = params.image_resized[
-    #                         params.num_pieces_vertical * small_img_h:params.num_pieces_vertical * small_img_h + remainder,
-    #                         j * small_img_w:(j + 1) * small_img_w, :]
-    #
-    #         similar_images = get_most_similar(cropped_image, params.small_images, remainder=remainder,
-    #                                           first_nth=len(params.image_resized))
-    #
-    #         if j == 0:
-    #             upper_neighbour = caroiaj_distinct[(params.num_pieces_vertical - 1) * small_img_h:
-    #                                                params.num_pieces_vertical * small_img_h,
-    #                               j * small_img_w:(j + 1) * small_img_w, :]
-    #             for img in similar_images:
-    #                 if not np.array_equal(img, upper_neighbour):
-    #                     chosen_image = img.copy()
-    #                     break
-    #
-    #         else:
-    #             left_neighbour = caroiaj_distinct[small_img_h * small_img_h:(small_img_h + 1) * small_img_h,
-    #                              (j - 1) * small_img_w:j * small_img_w, :]
-    #             upper_neighbour = caroiaj_distinct[(small_img_h - 1) * small_img_h:small_img_h * small_img_h,
-    #                               j * small_img_w:(j + 1) * small_img_w, :]
-    #
-    #             for img in similar_images:
-    #                 if not np.array_equal(img, left_neighbour) and not np.array_equal(img, upper_neighbour):
-    #                     chosen_image = img.copy()
-    #                     break
-    #
-    #         caroiaj_distinct[
-    #         params.num_pieces_vertical * small_img_h:params.num_pieces_vertical * small_img_h + remainder,
-    #         j * small_img_w:(j + 1) * small_img_w, :] = chosen_image.copy()
-
-    cv.imshow('Caroiaj', caroiaj_distinct)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-
-    # cv.imwrite('../Distinct_fe_100.png', caroiaj_distinct)
 
     return caroiaj_distinct
 
@@ -395,9 +338,6 @@ def add_pieces_hexagon(params: Parameters):
 
                 # partea de jos cand incep
                 if side == 0:
-                    # cv.imshow('asda', hexagon)
-                    # cv.waitKey(0)
-                    # cv.destroyAllWindows()
 
                     if i == lateral_mid:
                         if j == 0:
