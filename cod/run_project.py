@@ -7,7 +7,7 @@ from cod.parameters import *
 from cod.build_mosaic import *
 
 # numele imaginii care va fi transformata in mozaic
-image_path = './../data/imaginiTest/stading_john.jpeg'
+image_path = './../data/imaginiTest/adams.JPG'
 params = Parameters(image_path)
 
 # directorul cu imagini folosite pentru realizarea mozaicului
@@ -29,4 +29,4 @@ params.criterion = 'distantaCuloareMedie'
 params.hexagon = True
 params.dist_neighbor = True
 img_mosaic = build_mosaic(params)
-cv.imwrite('hexagon_dist_standing_john_100.png', img_mosaic)
+cv.imwrite('hexagon_dist_adams_100.png', img_mosaic)
