@@ -3,3 +3,7 @@
 tema1.pdf
 *.jpg
 !/cod/hexagon_dist_standing_john_100.jpg
+cod/.ipynb_checkpoints/
+cod/Untitled.ipynb
+cod/pdfimg/
+

@@ -26,19 +26,24 @@ def preprocess_hexagonal_mosaic(params):
     small_image_h, small_image_w = params.small_images[0].shape[:2]
     new_h, new_w = params.image_resized.shape[:2]
 
-    # daca imaginea e patrata o redimensionam dreptunghiulara
-    # pt. a putea extrage un romb "perfect" pt imagini generale
+    # daca suimaginile sunt patrate le redimensionam dreptunghiular
+    # pt. a putea extrage un hexagon "perfect" pt. imagini generale
     if small_image_h == small_image_w:
-        for i in range(len(params.small_images)):
-            params.small_images[i] = cv.resize(params.small_images[i], (small_image_h, 1.25 * small_image_w))
+        temp = np.zeros((params.small_images.shape[0], small_image_h, int(1.25 * small_image_w), 3), dtype='uint8')
 
-        small_image_h, small_image_w, _ = params.small_images.shape
+        for i in range(len(params.small_images)):
+            temp[i] = cv.resize(params.small_images[i], (int(1.25 * small_image_w), small_image_h))
+
+        params.small_images = temp.copy()
+
+        print("Dimensiune finala subimagine", params.small_images.shape)
+        _, small_image_h, small_image_w, _ = params.small_images.shape
 
     # atlfel daca imaginea e dreptunghiulara putem extrage rombul
     lateral_mid = small_image_h // 2
     mask = create_hexagon_mask(small_image_h, small_image_w)
 
-    # mareste imagine originala pentru a putea incapea si coltuirle hex ca ies din imagine
+    # mareste imagine originala pentru a putea incapea si coltuirle hex ce ies din imagine
     # la sfarsit taiem acele parti pentru a avea din nou dimensiunile originale
 
     hex_H, hex_W = new_h + 2 * lateral_mid, new_w + 2 * lateral_mid
@@ -48,7 +53,7 @@ def preprocess_hexagonal_mosaic(params):
     new_hex_image = np.zeros(shape=(hex_H, hex_W, 3), dtype='uint8')
     new_hex_image[lateral_mid:hex_H - lateral_mid, lateral_mid:hex_W - lateral_mid, :] = params.image_resized.copy()
 
-    # copieza pe noul border dark format colonele/liniile de la marginea imaginii
+    # copieza pe noul border dark  coloanele/liniile de la marginea imaginii
     for i in range(lateral_mid, hex_H - lateral_mid):
         new_hex_image[i, 0: lateral_mid, :] = new_hex_image[i, lateral_mid:2 * lateral_mid, :]
         new_hex_image[i, hex_W - lateral_mid: hex_W, :] = new_hex_image[i, hex_W - 2 * lateral_mid: hex_W - lateral_mid,
@@ -61,6 +66,8 @@ def preprocess_hexagonal_mosaic(params):
     return hex_H, hex_W, hexagon, lateral_mid, mask, new_hex_image, small_image_h, small_image_w
 
 
+# fiind data o colectie de imagini
+# gaseste prima imagine care este diferita de vecinii neighbors
 def find_first_diff_neighbor(similar_images, neighbors):
     for img in similar_images:
         ok = True
@@ -70,7 +77,7 @@ def find_first_diff_neighbor(similar_images, neighbors):
                 if np.array_equal(img, neighbor):
                     ok = False
                     break
-        # daca am gasit o poza care e diferita de vecini o returnam
+        # daca am gasit o imagine care e diferita de vecini o returnam
         if ok:
             return img.copy()
 
@@ -81,12 +88,13 @@ def create_hexagon_mask(small_image_h, small_image_w):
 
     # fie o piesa mica in forma dreptungiulara
     # daca luam lateral_mid jumatatea laturii laterale
-    # atunci vom avea un hexgon cu latura superiora si inefrioara
+    # atunci vom avea un hexgon cu latura superiora si inferioara
     # de lungime small_image_w - 2 * lateral mid
     lateral_mid = small_image_h // 2
 
     # det cele 4 colturi ce trebuie marchate cu 0 pentru a crea masca
-
+    # patrare de latura lateral_mid pentru care punem zero desupra
+    # sub diagonala principala/secundara in functie de orientare
     upper_left = mask[:lateral_mid, :lateral_mid, :]
     lower_right = mask[lateral_mid:, small_image_w - lateral_mid:small_image_w, :]
     upper_right = mask[:lateral_mid, small_image_w - lateral_mid:small_image_w, :]
@@ -160,6 +168,7 @@ def grid_image_with_diff_neighbors(params, new_h, new_w, small_img_h, small_img_
         for j in range(params.num_pieces_horizontal):
 
             h_piece = min(new_h - i * small_img_h, small_img_h)
+            # daca nu mai am de pus atunci ma opresc
             if h_piece == 0:
                 return caroiaj_distinct
 
@@ -246,9 +255,9 @@ def add_pieces_random(params: Parameters):
 
     random_image = np.zeros(shape=(new_h, new_w, 3), dtype='uint8')
 
-    # pool -  un dictionar de dictionar in care retin indicii ce mai sunt valabili
+    # pool -  un dictionar de dictionare in care retin indicii ce mai sunt valabili
     # daca o linie ramane fara indici liberi pentru coloana aceasta este stearsa
-    # am acoperit toata imaginea din dictionarul este gol
+    # am acoperit toata imaginea daca dictionarul este gol
     pool = {}
     for i in range(new_h):
         pool[i] = {}
@@ -257,7 +266,7 @@ def add_pieces_random(params: Parameters):
 
     # cat timp mai am indici de ales
     while len(pool) > 0:
-        print(len(pool))
+        print("Linii necompletate", len(pool))
 
         # alege o linie random
         current_i = np.array([k for k, v in pool.items()])
@@ -268,8 +277,8 @@ def add_pieces_random(params: Parameters):
         current_j = np.array([k for k, v in pool[rand_i].items()])
         rand_j = np.random.choice(current_j)
 
-        # step_X si steo_y se folosesc
-        # pentru a det care dim, maxima a unei imagini
+        # step_X si step_y se folosesc
+        # pentru a det care este dim. maxima a unei imagini
         # daca acesta incepe de la un indice (i,j) apropiat
         # de unele din marginile imaginii
         step_x = min(small_img_h, new_h - rand_i)
@@ -294,11 +303,8 @@ def add_pieces_random(params: Parameters):
                 # atunci sterge linie din pool
                 if len(pool[i]) == 0:
                     del pool[i]
-    cv.imwrite('../Random_Obama_100.png', random_image)
-    # print(random_image)
-    cv.imshow('asda', random_image)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
+
+    return random_image
 
 
 def add_pieces_hexagon_grid(params, small_image_h, small_image_w, hex_W, hex_H, end_W, step_j, lateral_mid,
@@ -307,27 +313,27 @@ def add_pieces_hexagon_grid(params, small_image_h, small_image_w, hex_W, hex_H, 
     for i in range(lateral_mid, hex_H, small_image_h):
         side = 0
         for j in range(0, end_W * step_j + 1, step_j):
-            #         rand_index = np.random.randint(0,len(image_collection))
-            #         ran_img = image_collection[rand_index]
 
             step_x, step_y = min(hex_H - i, small_image_h), min(hex_W - j, small_image_w)
-            #         print(step_x,step_y)
+
             cropped_image = new_hex_image[i - lateral_mid * side: i + step_x - lateral_mid * side, j:j + step_y,
                             :].copy()
 
             chosen_image = get_most_similar(cropped_image, params.small_images)[0]
 
             if side == 0:
-                #             print(hexagon[ i : i + step_x ,j : j+ step_y,:].shape)
-                #             print(np.multiply(final,chosen_image)[:step_x,:step_y,:].shape)
+                # prin adunarea unei imaginii se scrie o subimagine fara
+                # a suprascrie ceva scris anterior(pentru un col se vor aduna doar 0-uri cu valorile precedente)
                 hexagon[i: i + step_x, j: j + step_y, :] += np.multiply(mask, chosen_image)[:step_x, :step_y, :]
             else:
-                #             up = 0 if i - offset == 0 else 1
+
                 hexagon[i - lateral_mid: i + step_x - lateral_mid, j:j + step_y, :] += np.multiply(mask,
                                                                                                    chosen_image)[
                                                                                        :step_x,
                                                                                        :step_y, :]
-
+            # pentru fiecare pas pe linie i
+            # schimba side-ul pe care suntem
+            # punem o piesa jos si pe cea adiacenta de dreapta-sus
             side = 1 - side
 
     return hexagon
@@ -359,11 +365,6 @@ def add_pieces_hexagon(params: Parameters):
 
     hexagon = hexagon[lateral_mid:hex_H - lateral_mid, lateral_mid:hex_W - lateral_mid, :].copy()
 
-    print(hexagon.shape)
-    # cv.imwrite('../Hex_obama_100.png', hexagon)
-    cv.imshow('asda', hexagon)
-    cv.waitKey(0)
-    cv.destroyAllWindows()
     return hexagon
 
 
@@ -375,6 +376,9 @@ def diff_neighbors_hexagon(end_W, hex_H, hex_W, hexagon, lateral_mid, mask, new_
 
         for j in range(0, end_W * step_j + 1, step_j):
 
+            # in cazul in care hexagonul nu incape in imagine
+            # se cropeaza doar cat mai este nevoie
+            # pentru a completa imaginea mare
             step_x, step_y = min(hex_H - i, small_image_h), min(hex_W - j, small_image_w)
 
             cropped_image = new_hex_image[i - lateral_mid * side: i + step_x - lateral_mid * side, j:j + step_y,
@@ -383,9 +387,8 @@ def diff_neighbors_hexagon(end_W, hex_H, hex_W, hexagon, lateral_mid, mask, new_
             similar_images = get_most_similar(cropped_image, params.small_images,
                                               remainder=0,
                                               first_nth=len(params.image_resized))
-            # a masked list of similar images
-            # which is used to choose the right piece which is different
-            # than a specific neighbor
+            # o lista de subimagini similare pe care
+            # a fost aplicata deja masca hexagonala
             masked_similar_img = np.multiply(mask, similar_images)[:, :step_x, :step_y, :]
 
             # partea de jos cand incep
@@ -404,7 +407,7 @@ def diff_neighbors_hexagon(end_W, hex_H, hex_W, hexagon, lateral_mid, mask, new_
                                                      hexagon[i - lateral_mid: i - lateral_mid + step_x,
                                                      j - rest_width: j - rest_width + step_y])
 
-                        # gaseste prima imagine diferita de vecini/i
+                        # gaseste prima imagine diferita de vecin/i
                         chosen_image = find_first_diff_neighbor(
                             masked_similar_img, [top_left_neigh])
                 else:
@@ -439,7 +442,8 @@ def diff_neighbors_hexagon(end_W, hex_H, hex_W, hexagon, lateral_mid, mask, new_
                 hexagon[i: i + step_x, j: j + step_y, :] += np.multiply(mask[:step_x, :step_y, :], chosen_image)[
                                                             :step_x, :step_y, :]
 
-            # partea de sus cand incep
+            # pentru hexagonale de pe linie i  dreapta-sus
+            # side = 1
             else:
                 # verific cei 3/4 vecini
 
@@ -474,10 +478,7 @@ def diff_neighbors_hexagon(end_W, hex_H, hex_W, hexagon, lateral_mid, mask, new_
                                                              upper_right_neigh])
 
                 hexagon[i - lateral_mid: i + step_x - lateral_mid, j:j + step_y, :] += np.multiply(
-                    mask[:step_x, :step_y],
-                    chosen_image)[
-                                                                                       :step_x,
-                                                                                       :step_y, :]
+                    mask[:step_x, :step_y], chosen_image)[:step_x, :step_y, :]
 
             side = 1 - side
 
