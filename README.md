@@ -9,8 +9,8 @@ python3 run_project.py
 
 
 ![Cat of cats]
-(/cod/caroiaj_dist_standing_john_100.png)
+(https://postimg.cc/gwkjcNKB)
 
 ![hexagon_pieces]
-(/cod/hexagon_dist_tom_100.png)
+(https://postimg.cc/xX9TgtBT)
 
