@@ -8,9 +8,8 @@ python3 run_project.py
 ```
 
 
-![Cat of cats]
-(https://postimg.cc/gwkjcNKB)
+![caroiaj_dist_standing_john_100](https://user-images.githubusercontent.com/21235087/98833121-56f2de80-2446-11eb-8435-c61a347a7482.png)
 
-![hexagon_pieces]
-(https://postimg.cc/xX9TgtBT)
+
+![hexagon_dist_tom_100](https://user-images.githubusercontent.com/21235087/98833173-640fcd80-2446-11eb-9f96-4bec8a2bd0bc.png)
 
